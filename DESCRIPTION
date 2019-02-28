@@ -1,0 +1,22 @@
+
+Package: Solo
+Title: Tabulates Prevalence and Hazard Ratios ("Never Tell me the Odds!")
+Version: 0.1.0
+Authors@R: person("Byron", "Jaeger", email = "bcjaeger@uab.edu",
+                  role = c("aut", "cre"))
+Description: Computes and tabulates prevalence and hazard ratios.
+Depends: R (>= 3.5.0)
+License: GPL-3
+LazyData: true
+RoxygenNote: 6.1.1
+Encoding: UTF-8
+Imports:
+    dplyr,
+    tidyr,
+    rlang,
+    titanic,
+    forcats,
+    purrr,
+    magrittr,
+    geepack,
+    gt
