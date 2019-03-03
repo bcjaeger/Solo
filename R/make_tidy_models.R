@@ -4,16 +4,16 @@
 #' @param data a data frame or mids object
 #' @param exposure a character indicating the column name of the exposure.
 #'
-#' @return a list of gee models
+#' @return a list of tidy model summaries
 #' @export
 
-gee_work <- function(
+make_tidy_models <- function(
   data,
   model_formulas,
   exposure
 ){
 
-  UseMethod("gee_work")
+  UseMethod("make_tidy_models")
 
 }
 

@@ -1,60 +1,25 @@
 
-#' Generate a nice table with prevalence ratios
+#' Generate a publication-ready table with hazard ratios
 #' @param data a data frame
-#' @param exposure a named character vector. Names are variable labels. Values are column names in the data.
-#' @param outcome a named character vector. Names are outcome labels. Values are column names of the outcomes in the data.
+#' @param exposure a named character vector. Names are variable labels. Values are column names in data.
+#' @param time a named character vector. Names are labels for time variables. Values are column names of the time columns in data.
+#' @param status a named character vector. Names are labels for status variables. Values are column names of the status columns in data.
 #' @param control a list of character vectors. The ith item in the list should contain column names of variables that will be added as control variables for the ith model. Naming the character vectors will result in the names being used as labels for control variables in the footnote of the table.
 #' @param include.unadjusted logical. Should unadjusted prevalence ratios be presented in the table?
-#' @param include.descriptive logical. Should the prevalence of the outcome be presented in the table?
+#' @param include.descriptive logical. Should event rates be presented in the table?
+#' @param person_years_denominator integer. Incidence rates will be computed per this number.
 #' @param return_data logical. Should the table data be returned instead of the table?
 #' @export
-#' @importFrom stats "as.formula" "complete.cases" "poisson" "qnorm"
-#' @importFrom magrittr "set_names" "%>%" "%<>%"
-#' @importFrom dplyr 'mutate' 'select' 'filter' 'bind_rows' 'everything' 'group_by' 'as_tibble'
-#' @importFrom purrr 'map' 'map_lgl' 'map2' 'reduce'
-#' @importFrom tidyr 'spread' 'gather'
-#' @importFrom broom 'tidy'
-#' @importFrom survival "Surv"
 
-#' @examples
-#' library(titanic)
-#' library(magrittr)
-#' library(dplyr)
-#' library(gt)
-#'
-#' data <- titanic_train %>%
-#'   dplyr::select(Survived, Pclass, Sex, Age, SibSp, Fare) %>%
-#'   as_tibble() %>%
-#'   dplyr::mutate(
-#'     Pclass=factor(
-#'       Pclass,
-#'       levels=c(1,2,3),
-#'       labels=c("1st Class","2nd Class","3rd Class")
-#'     )
-#'   ) %>%
-#'   na.omit()
-#'
-#' tst_output <- pr_table(
-#'   data=data,
-#'   exposure=c("Passenger class"='Pclass'),
-#'   outcome=c("Survival"='Survived'),
-#'   control=list(
-#'     c("Passenger gender"="Sex"),
-#'     c("Passenger age"="Age",
-#'       "Ticket price"="Fare"),
-#'     c("Gender by age interaction"="Sex:Age")
-#'   ),
-#'   include.unadjusted=TRUE,
-#'   include.descriptive=TRUE
-#' )
-
-pr_table <- function(
+hr_table <- function(
   data,
   exposure,
-  outcome,
+  time,
+  status,
   control,
   include.unadjusted=TRUE,
   include.descriptive=TRUE,
+  person_years_denominator=1000,
   return_data=FALSE
 ){
 
@@ -62,8 +27,8 @@ pr_table <- function(
 
   estimate = conf.low = conf.high = grp = term = . = NULL
   model = prev_ratio = p.value = table_value = tmp = NULL
-  n = n_total = n_subs = n_cases = prevalence = NULL
-  nsubs = table_values = table_part = table_row = NULL
+  n_total = n_subs = n_cases = prevalence = outcome = NULL
+  n = nsubs = table_values = table_part = table_row = NULL
 
   # Check inputs ------------------------------------------------------------
 
@@ -76,21 +41,24 @@ pr_table <- function(
   if(!is.list(control)){
     stop("control should be a list, e.g. control=list(m1=c('x1'), m2=c('x2'))")
   }
-  if(is.null(names(outcome))){
-    warning("No names on outcome vector. Labels are set using names")
+  if(is.null(names(time))){
+    warning("No names on time vector. Labels are set using names")
+  }
+  if(is.null(names(time))){
+    warning("No names on status vector. Labels are set using names")
   }
   if(is.null(names(exposure))){
     warning("No names on exposure vector. Labels are set using names")
   }
 
-
   # Scrub inputs ------------------------------------------------------------
 
   # Identify all of the variables that are used for modeling
   all_vars <- scrub_variables(
-      purrr::reduce(control, c),
-      exposure,
-      outcome
+    purrr::reduce(control, c),
+    exposure,
+    time,
+    status
   )
 
   # check to make sure the data are complete for these variables,
@@ -107,10 +75,12 @@ pr_table <- function(
   if(include.descriptive){
 
     # descriptives are computed on original (not imputed) data
-    descriptives <- compute_binary_descriptives(
+    descriptives <- compute_survival_descriptives(
       data = og_data,
       exposure = exposure,
-      outcome = outcome
+      status = status,
+      time = time,
+      N = person_years_denominator
     )
 
   } else {
@@ -152,6 +122,8 @@ pr_table <- function(
 
     # if format is correct, set up model formulas for next step
 
+    outcome = paste0("survival::Surv(",time,', ',status,')')
+
     model_formulas <- model_predictors %>%
       map(
         ~ paste(
@@ -177,7 +149,7 @@ pr_table <- function(
     bind_models(
       model_formulas = model_formulas,
       descriptives = descriptives
-  )
+    )
 
   if(return_data){
 
@@ -185,10 +157,16 @@ pr_table <- function(
 
   } else {
 
-    outcome_label <- if(!is.null(names(outcome))){
-      names(outcome)
+    time_label <- if(!is.null(names(time))){
+      names(time)
     } else {
-      outcome
+      time
+    }
+
+    status_label <- if(!is.null(names(status))){
+      names(status)
+    } else {
+      status
     }
 
     exposure_label <- if(!is.null(names(exposure))){
@@ -199,7 +177,7 @@ pr_table <- function(
 
     model_table %>%
       magrittr::set_names(
-        gsub("table_row",outcome_label,names(.))
+        gsub("table_row",status_label,names(.))
       ) %>%
       gt::gt() %>%
       gt::tab_spanner(
@@ -212,7 +190,7 @@ pr_table <- function(
       ) %>%
       gt::cols_align(
         align='left',
-        columns=outcome_label
+        columns=status_label
       ) %>%
       gt::tab_footnote(
         footnote=footnote,
