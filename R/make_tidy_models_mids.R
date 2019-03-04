@@ -13,6 +13,8 @@ make_tidy_models.mids <- function(
   exposure
 ){
 
+  # For cran
+
   `P(>|t|)` = Std.Error = Estimate = term = estimate = NULL
   Std.err = std.error = p.value = conf.low = conf.high = NULL
 

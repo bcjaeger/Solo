@@ -9,7 +9,36 @@
 #' @param include.descriptive logical. Should event rates be presented in the table?
 #' @param person_years_denominator integer. Incidence rates will be computed per this number.
 #' @param return_data logical. Should the table data be returned instead of the table?
+#' @param collapse_footer logical. Should the model footnote be collapsed?
 #' @export
+#' @examples
+#'
+#' library(survival)
+#' library(magrittr)
+#' library(dplyr)
+#'
+#' data = pbc %>%
+#' as_tibble() %>%
+#'   mutate(
+#'     status=case_when(
+#'       status==2 ~ 1L,
+#'       TRUE ~ status
+#'     )
+#'   ) %>%
+#'   na.omit()
+#'
+#' hr_table(
+#'  data=data,
+#'  exposure=c("Patient sex"='sex'),
+#'  time=c("time since baseline, days"='time'),
+#'  status=c("Death or recurrence" = 'status'),
+#'  control=list(
+#'    c("ascites"="ascites"),
+#'    c("patient age"="age",
+#'      "treatment"="trt"),
+#'    c("bilirubin"="bili")
+#'    )
+#'  )
 
 hr_table <- function(
   data,
@@ -20,7 +49,8 @@ hr_table <- function(
   include.unadjusted=TRUE,
   include.descriptive=TRUE,
   person_years_denominator=1000,
-  return_data=FALSE
+  return_data=FALSE,
+  collapse_footer = FALSE
 ){
 
   # Initialize for CRAN -----------------------------------------------------
@@ -99,7 +129,8 @@ hr_table <- function(
   # A footnote goes under the table to indicate model structure
   footnote <- write_footer(
     model_predictors = model_predictors,
-    control = control
+    control = control,
+    collapse = collapse_footer
   )
 
   if(include.unadjusted){
@@ -175,7 +206,7 @@ hr_table <- function(
       exposure
     }
 
-    model_table %>%
+    model_table %<>%
       magrittr::set_names(
         gsub("table_row",status_label,names(.))
       ) %>%
@@ -191,16 +222,34 @@ hr_table <- function(
       gt::cols_align(
         align='left',
         columns=status_label
-      ) %>%
-      gt::tab_footnote(
-        footnote=footnote,
-        locations = gt::cells_data(
-          columns=1,
-          rows=if(include.descriptive) 4 else 1
-        )
       )
-  }
 
+    if(collapse_footer){
+      model_table %<>%
+        gt::tab_footnote(
+          footnote=footnote,
+          locations = gt::cells_data(
+            columns=1,
+            rows=which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[1])
+          )
+        )
+    } else {
+      for(i in 1:length(control)){
+        model_table %<>%
+          gt::tab_footnote(
+            footnote = footnote[[i]][1],
+            locations = gt::cells_data(
+              columns = 1,
+              rows = which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[i])
+            )
+          )
+      }
+
+    }
+
+    model_table
+
+  }
   # gt::tab_options(
   #   footnote.glyph=c("*, †, ‡, §, ||, ¶, #, **")
   # )

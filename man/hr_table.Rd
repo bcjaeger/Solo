@@ -6,7 +6,8 @@
 \usage{
 hr_table(data, exposure, time, status, control,
   include.unadjusted = TRUE, include.descriptive = TRUE,
-  person_years_denominator = 1000, return_data = FALSE)
+  person_years_denominator = 1000, return_data = FALSE,
+  collapse_footer = FALSE)
 }
 \arguments{
 \item{data}{a data frame}
@@ -26,7 +27,38 @@ hr_table(data, exposure, time, status, control,
 \item{person_years_denominator}{integer. Incidence rates will be computed per this number.}
 
 \item{return_data}{logical. Should the table data be returned instead of the table?}
+
+\item{collapse_footer}{logical. Should the model footnote be collapsed?}
 }
 \description{
 Generate a publication-ready table with hazard ratios
+}
+\examples{
+
+library(survival)
+library(magrittr)
+library(dplyr)
+
+data = pbc \%>\%
+as_tibble() \%>\%
+  mutate(
+    status=case_when(
+      status==2 ~ 1L,
+      TRUE ~ status
+    )
+  ) \%>\%
+  na.omit()
+
+hr_table(
+ data=data,
+ exposure=c("Patient sex"='sex'),
+ time=c("time since baseline, days"='time'),
+ status=c("Death or recurrence" = 'status'),
+ control=list(
+   c("ascites"="ascites"),
+   c("patient age"="age",
+     "treatment"="trt"),
+   c("bilirubin"="bili")
+   )
+ )
 }

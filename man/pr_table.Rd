@@ -5,7 +5,8 @@
 \title{Generate a nice table with prevalence ratios}
 \usage{
 pr_table(data, exposure, outcome, control, include.unadjusted = TRUE,
-  include.descriptive = TRUE, return_data = FALSE)
+  include.descriptive = TRUE, return_data = FALSE,
+  collapse_footer = FALSE)
 }
 \arguments{
 \item{data}{a data frame}
@@ -21,6 +22,8 @@ pr_table(data, exposure, outcome, control, include.unadjusted = TRUE,
 \item{include.descriptive}{logical. Should the prevalence of the outcome be presented in the table?}
 
 \item{return_data}{logical. Should the table data be returned instead of the table?}
+
+\item{collapse_footer}{logical. Should the model footnote be collapsed?}
 }
 \description{
 Generate a nice table with prevalence ratios

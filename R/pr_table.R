@@ -7,6 +7,7 @@
 #' @param include.unadjusted logical. Should unadjusted prevalence ratios be presented in the table?
 #' @param include.descriptive logical. Should the prevalence of the outcome be presented in the table?
 #' @param return_data logical. Should the table data be returned instead of the table?
+#' @param collapse_footer logical. Should the model footnote be collapsed?
 #' @export
 #' @importFrom stats "as.formula" "complete.cases" "poisson" "qnorm"
 #' @importFrom magrittr "set_names" "%>%" "%<>%"
@@ -55,7 +56,8 @@ pr_table <- function(
   control,
   include.unadjusted=TRUE,
   include.descriptive=TRUE,
-  return_data=FALSE
+  return_data=FALSE,
+  collapse_footer = FALSE
 ){
 
   # Initialize for CRAN -----------------------------------------------------
@@ -129,7 +131,8 @@ pr_table <- function(
   # A footnote goes under the table to indicate model structure
   footnote <- write_footer(
     model_predictors = model_predictors,
-    control = control
+    control = control,
+    collapse = collapse_footer
   )
 
   if(include.unadjusted){
@@ -197,7 +200,7 @@ pr_table <- function(
       exposure
     }
 
-    model_table %>%
+    model_table %<>%
       magrittr::set_names(
         gsub("table_row",outcome_label,names(.))
       ) %>%
@@ -213,14 +216,36 @@ pr_table <- function(
       gt::cols_align(
         align='left',
         columns=outcome_label
-      ) %>%
-      gt::tab_footnote(
-        footnote=footnote,
-        locations = gt::cells_data(
-          columns=1,
-          rows=if(include.descriptive) 4 else 1
-        )
       )
+
+    if(collapse_footer){
+
+      model_table %<>%
+        gt::tab_footnote(
+          footnote=footnote,
+          locations = gt::cells_data(
+            columns=1,
+            rows=which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[1])
+          )
+        )
+
+    } else {
+
+      for(i in 1:length(control)){
+        model_table %<>%
+          gt::tab_footnote(
+            footnote = footnote[[i]][1],
+            locations = gt::cells_data(
+              columns = 1,
+              rows = which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[i])
+            )
+          )
+      }
+
+    }
+
+    model_table
+
   }
 
   # gt::tab_options(

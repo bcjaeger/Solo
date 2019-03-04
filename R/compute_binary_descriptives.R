@@ -3,6 +3,7 @@
 #' @param data a data set
 #' @param exposure the exposure
 #' @param outcome the outcome
+#' @export
 
 compute_binary_descriptives <- function(data, exposure, outcome){
 

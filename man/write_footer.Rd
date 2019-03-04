@@ -4,12 +4,14 @@
 \alias{write_footer}
 \title{writes a footnote describing the models in a prevalence table}
 \usage{
-write_footer(model_predictors, control)
+write_footer(model_predictors, control, collapse)
 }
 \arguments{
 \item{model_predictors}{a list describing model predictors.}
 
 \item{control}{a list describing control parameters.}
+
+\item{collapse}{logical. Should it be one footnote or multiple (one per model)?}
 }
 \value{
 a character value of a table footnote
