@@ -5,7 +5,7 @@
 #' @param time a named character vector. Names are labels for time variables. Values are column names of the time columns in data.
 #' @param status a named character vector. Names are labels for status variables. Values are column names of the status columns in data.
 #' @param control a list of character vectors. The ith item in the list should contain column names of variables that will be added as control variables for the ith model. Naming the character vectors will result in the names being used as labels for control variables in the footnote of the table.
-#' @param include.unadjusted logical. Should unadjusted prevalence ratios be presented in the table?
+#' @param include.unadjusted logical. Should unadjusted hazard ratios be presented in the table?
 #' @param include.descriptive logical. Should event rates be presented in the table?
 #' @param person_years_denominator integer. Incidence rates will be computed per this number.
 #' @param return_data logical. Should the table data be returned instead of the table?

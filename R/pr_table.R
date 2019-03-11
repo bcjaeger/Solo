@@ -200,51 +200,52 @@ pr_table <- function(
       exposure
     }
 
-    model_table %<>%
-      magrittr::set_names(
-        gsub("table_row",outcome_label,names(.))
+    kable_dat <- model_table %>%
+      group_by(table_part) %>%
+      nest() %>%
+      mutate(group_index = map_int(data, nrow))
+
+    label_row_css <- "text-align: left; background-color: #666; color: #fff;"
+
+    header <- c(1, length(levels(og_data[[exposure]])))
+    names(header) <- c(" ", exposure_label)
+
+    kab <- kable_dat$data %>%
+      bind_rows() %>%
+      mutate(table_row = as.character(table_row))
+
+    kab_models <- grep("Model",kab$table_row)
+
+    kab$table_row[kab_models] <- paste0(
+      footnote_marker_symbol(1:length(control)),
+      "Model ",
+      1:length(control)
+    )
+
+    kab %>%
+      set_names(c("",names(.)[-1])) %>%
+      kable(
+        align = c("l",rep("c",ncol(.)-1)),
+        escape=FALSE
       ) %>%
-      gt::gt() %>%
-      gt::tab_spanner(
-        label=exposure_label,
-        columns=levels(og_data[[exposure]])
+      kable_styling("striped") %>%
+      group_rows(
+        paste0(
+          kable_dat$table_part[2]
+        ),
+        sum(kable_dat$group_index[1:1])+1,
+        sum(kable_dat$group_index[1:2]),
+        hline_after = TRUE
       ) %>%
-      gt::cols_align(
-        align='center',
-        columns=levels(og_data[[exposure]])
+      group_rows(
+        outcome_label,
+        1, sum(kable_dat$group_index),
+        label_row_css = label_row_css
       ) %>%
-      gt::cols_align(
-        align='left',
-        columns=outcome_label
+      kableExtra::add_header_above(header) %>%
+      kableExtra::add_footnote(
+        label = footnote, notation = 'symbol'
       )
-
-    if(collapse_footer){
-
-      model_table %<>%
-        gt::tab_footnote(
-          footnote=footnote,
-          locations = gt::cells_data(
-            columns=1,
-            rows=which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[1])
-          )
-        )
-
-    } else {
-
-      for(i in 1:length(control)){
-        model_table %<>%
-          gt::tab_footnote(
-            footnote = footnote[[i]][1],
-            locations = gt::cells_data(
-              columns = 1,
-              rows = which(.[[1]]==setdiff(names(model_formulas),"Unadjusted")[i])
-            )
-          )
-      }
-
-    }
-
-    model_table
 
   }
 
