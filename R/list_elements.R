@@ -24,26 +24,27 @@ list_elements = function(
 
   if(use_names){
     if(is.numeric(x)){
-      xx = paste(
+      out = paste(
         names(x),
         format(round(x,2), nsmall = 2),
         sep = sep_string
         )
     }
     if (is.character(x)){
-      xx = if(lower) tolower(names(x)) else names(x)
+      out = names(x)
     }
   } else {
-    xx = x
+    out = x
   }
 
   if (length_x == 1){
-    paste(xx)
+    out <- paste(out)
   } else if (length_x == 2){
-    paste0(xx[1], ' and ', xx[2])
+    out <- paste0(out[1], ' and ', out[2])
   } else if (length_x >= 3){
-    start = paste(xx[1:(length_x-1)], collapse = col_string)
-    stop =  paste0(end_string, xx[length_x])
-    paste(start, stop)
+    start = paste(out[1:(length_x-1)], collapse = col_string)
+    stop =  paste0(end_string, out[length_x])
+    out <- paste(start, stop)
   }
+  if(lower) tolower(out) else out
 }
