@@ -4,10 +4,14 @@
 \alias{gather_predictors}
 \title{helper function to translate control objects into lists of model formulas}
 \usage{
-gather_predictors(control)
+gather_predictors(control, data, nested_models)
 }
 \arguments{
 \item{control}{a list of character vectors.}
+
+\item{data}{a data frame}
+
+\item{nested_models}{are the models nested?}
 }
 \value{
 a set of parameters for regression models
