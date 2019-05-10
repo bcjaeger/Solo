@@ -197,6 +197,31 @@ analyze <- function(
 
   }
 
+  # Check the format of exposures -------------------------------------------
+
+  exposures_to_print <- NULL
+
+  for(.exposure in formula_variables$exposure){
+
+    if(!is.factor(data_orig[[.exposure]])){
+      exposures_to_print %<>% c(.exposure)
+    }
+
+  }
+
+  if(!is.null(exposures_to_print)){
+
+    err_msg <- paste(
+      "Solo does not yet support continuous exposure variables.",
+      "Please check the variable types for the following exposure:",
+      paste(exposures_to_print, collapse = ' -- '),
+      sep = '\n'
+    )
+
+    stop(err_msg)
+
+  }
+
   # Check the format of outcomes --------------------------------------------
 
   if(analysis_type=='rel_risk'){
