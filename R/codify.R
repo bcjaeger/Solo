@@ -167,10 +167,12 @@ codify <- function(
 
           }
 
-          tabdat %<>% tidyr::pivot_wider(
-            names_from = formula,
-            values_from = table_value
-          )
+          tabdat %<>% spread(formula, table_value)
+
+          # tabdat %<>% tidyr::pivot_wider(
+          #   names_from = formula,
+          #   values_from = table_value
+          # )
 
           runs <- rle(tabdat$group)
           runs$values[runs$lengths==1] <- ' '

@@ -429,7 +429,17 @@ simpute_test.coxph <- function(
 
         } else {
 
-          .variable_label = if(is.factor(data$orig[[.variable]])){
+          .variable_label = if(grepl(":", .variable, fixed=TRUE)){
+            .variable_components <-
+              strsplit(.variable, ":", fixed=TRUE) %>%
+              unlist() %>%
+              map_chr(
+                .f=function(.component){
+                  paste0(.component, levels(data$orig[[.component]])[2])
+                }
+              ) %>%
+              paste(collapse=":")
+          } else if(is.factor(data$orig[[.variable]])){
             paste0(.variable, levels(data$orig[[.variable]])[2])
           } else {
             .variable
@@ -580,7 +590,17 @@ mimpute_test.coxph <- function(
 
         } else {
 
-          .variable_label = if(is.factor(data$orig[[.variable]])){
+          .variable_label = if(grepl(":", .variable, fixed=TRUE)){
+            .variable_components <-
+              strsplit(.variable, ":", fixed=TRUE) %>%
+              unlist() %>%
+              map_chr(
+                .f=function(.component){
+                  paste0(.component, levels(data$orig[[.component]])[2])
+                }
+              ) %>%
+              paste(collapse=":")
+          } else if(is.factor(data$orig[[.variable]])){
             paste0(.variable, levels(data$orig[[.variable]])[2])
           } else {
             .variable
