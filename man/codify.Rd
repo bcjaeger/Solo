@@ -4,7 +4,7 @@
 \alias{codify}
 \title{organize the output of a solo object into a table.}
 \usage{
-codify(solo_input, type, filler_value = " ")
+codify(solo_input, type = c("long", "wide"), filler_value = " ")
 }
 \arguments{
 \item{solo_input}{an object returned by the analyze function}

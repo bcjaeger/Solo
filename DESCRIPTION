@@ -26,6 +26,5 @@ Imports:
     geepack,
     mitml,
     mice,
-    gt,
     broom,
     survival
